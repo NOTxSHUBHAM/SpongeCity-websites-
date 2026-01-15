@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpongeCity AI - Advanced Flood Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #2196F3;
+            --secondary-blue: #21CBF3;
+            --accent-green: #4CAF50;
+            --accent-orange: #FF9800;
+            --accent-red: #F44336;
+            --dark-gray: #333;
+            --light-gray: #f5f5f5;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --gradient-blue: linear-gradient(135deg, #2196F3, #21CBF3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--dark-gray);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: var(--gradient-blue);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-links a.active:after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .language-selector {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-blue);
+        }
+
+        .gauge-container {
+            margin: 1rem 0;
+        }
+
+        .gauge {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: var(--gradient-blue);
+            transition: width 1s ease;
+        }
+
+        /* Sensor Network */
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .sensor-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .sensor-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Community Reports */
+        .report-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .report-input {
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        /* AR Container */
+        .ar-container {
+            height: 400px;
+            background: #000;
+            border-radius: 12px;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gamification */
+        .points-system {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            width: 50px;
+            height: 50px;
+            background: gold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* 3D Visualization */
+        .three-container {
+            width: 100%;
+            height: 400px;
+            background: #1a1a2e;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        /* Emergency Broadcast */
+        .emergency-alert {
+            background: linear-gradient(135deg, #F44336, #FF5252);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            animation: flash 1s infinite;
+            display: none;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Analytics Charts */
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--primary-blue);
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .nav-links.active {
+                display: flex;
+            }
+            
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Utility Classes */
+        .btn {
+            padding: 1rem 2rem;
+            background: var(--gradient-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #F44336, #FF5252);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin: 2rem 0 1rem;
+            color: var(--primary-blue);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-water"></i>
+            <h1>SpongeCity AI</h1>
+        </div>
+        
+        <nav class="nav-links" id="navLinks">
+            <a href="#dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="#map"><i class="fas fa-map"></i> Map</a>
+            <a href="#predictions"><i class="fas fa-brain"></i> AI Predictions</a>
+            <a href="#reports"><i class="fas fa-bullhorn"></i> Community</a>
+            <a href="#analytics"><i class="fas fa-chart-line"></i> Analytics</a>
+            <select class="language-selector" id="languageSelect">
+                <option value="en">🌐 English</option>
+                <option value="es">🌐 Español</option>
+                <option value="zh">🌐 中文</option>
+            </select>
+        </nav>
+    </header>
+
+    <!-- Emergency Alert -->
+    <div class="container">
+        <div class="emergency-alert" id="emergencyAlert">
+            <i class="fas fa-bullhorn"></i>
+            <strong>EMERGENCY ALERT:</strong> Severe flooding predicted in Downtown Area within 2 hours. Evacuation recommended.
+            <button class="btn btn-danger" style="margin-left: 1rem;">View Evacuation Routes</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Dashboard Section -->
+        <section id="dashboard">
+            <h2 class="section-title">AI Flood Intelligence Dashboard</h2>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Active Alerts</h3>
+                    </div>
+                    <div class="card-value high" id="activeAlerts">3</div>
+                    <p>Real-time threat monitoring</p>
+                    <div class="gauge-container">
+                        <div class="gauge">
+                            <div class="gauge-fill" style="width: 75%"></div>
+                        </div>
+                        <div>System Threat Level: HIGH</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-microchip"></i>
+                        <h3>Sensor Network</h3>
+                    </div>
+                    <div class="sensor-grid" id="sensorGrid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-cloud-rain"></i>
+                        <h3>Live Weather</h3>
+                    </div>
+                    <div id="weatherWidget">
+                        <div style="font-size: 2rem;">28°C</div>
+                        <div>Rainfall: <span id="rainfallRate">2.5</span>mm/hr</div>
+                        <div>Humidity: 85%</div>
+                        <div>Next 6h: 15mm expected</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <i class="fas fa-water"></i>
+                        <h3>Water Levels</h3>
+                    </div>
+                    <div id="waterLevels">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section id="map">
+            <h2 class="section-title">Interactive Flood Map</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div id="map" style="height: 500px; border-radius: 12px;"></div>
+                <div>
+                    <div class="dashboard-card">
+                        <h3>Map Controls</h3>
+                        <div class="map-controls">
+                            <div><input type="checkbox" id="floodLayer" checked> Flood Risk</div>
+                            <div><input type="checkbox" id="infraLayer"> Infrastructure</div>
+                            <div><input type="checkbox" id="sensorLayer"> Sensors</div>
+                            <div><input type="checkbox" id="evacLayer"> Evacuation Routes</div>
+                        </div>
+                        <button class="btn" onclick="show3DView()" style="margin-top: 1rem;">
+                            <i class="fas fa-cube"></i> 3D Visualization
+                        </button>
+                    </div>
+                    
+                    <div class="dashboard-card" style="margin-top: 1rem;">
+                        <h3>Community Reports</h3>
+                        <div id="communityFeed"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D Visualization -->
+        <section id="threeView" style="display: none;">
+            <h2 class="section-title">3D Flood Simulation</h2>
+            <div class="three-container" id="threeContainer"></div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn" onclick="simulateRainfall()">
+                    <i class="fas fa-cloud-rain"></i> Simulate Heavy Rainfall
+                </button>
+                <button class="btn btn-secondary" onclick="showMap()">
+                    <i class="fas fa-map"></i> Back to Map
+                </button>
+            </div>
+        </section>
+
+        <!-- AI Predictions -->
+        <section id="predictions">
+            <h2 class="section-title">AI Flood Predictions</h2>
+            <div class="dashboard-card">
+                <h3><i class="fas fa-brain"></i> Machine Learning Risk Assessment</h3>
+                <div id="predictionGrid" class="dashboard-grid" style="margin-top: 1rem;"></div>
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-success" onclick="runPredictionModel()">
+                        <i class="fas fa-play"></i> Run AI Prediction
+                    </button>
+                    <button class="btn" onclick="showHistoricalData()">
+                        <i class="fas fa-history"></i> View Historical Analysis
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community Reports -->
+        <section id="reports">
+            <h2 class="section-title">Community Intelligence</h2>
+            
+            <!-- Gamification -->
+            <div class="points-system">
+                <h3><i class="fas fa-trophy"></i> Citizen Points System</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div>Level: <span id="citizenLevel">5</span></div>
+                        <div>Points: <span id="citizenPoints">1250</span></div>
+                        <div>Rank: Top 10%</div>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge"><i class="fas fa-medal"></i></div>
+                        <div class="badge"><i class="fas fa-star"></i></div>
+                        <div class="badge"><i class="fas fa-shield-alt"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Form -->
+            <div class="report-form">
+                <h3><i class="fas fa-flag"></i> Submit Report</h3>
+                <div class="report-grid">
+                    <select class="report-input" id="reportType">
+                        <option value="flood">Flooding</option>
+                        <option value="blockage">Drainage Blockage</option>
+                        <option value="damage">Infrastructure Damage</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="text" class="report-input" id="reportLocation" placeholder="Location or Address">
+                </div>
+                <textarea class="report-input" id="reportDescription" placeholder="Description" style="width: 100%; height: 100px; margin-bottom: 1rem;"></textarea>
+                <div>
+                    <button class="btn" onclick="submitReport()">
+                        <i class="fas fa-paper-plane"></i> Submit Report (Earn 50 Points)
+                    </button>
+                    <button class="btn btn-secondary" onclick="useCamera()">
+                        <i class="fas fa-camera"></i> Add Photo
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics -->
+        <section id="analytics">
+            <h2 class="section-title">Advanced Analytics</h2>
+            
+            <div class="chart-container">
+                <h3>Flood Incident History</h3>
+                <canvas id="floodChart" height="100"></canvas>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="chart-container">
+                    <h3>Infrastructure Effectiveness</h3>
+                    <canvas id="infraChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Response Time Analysis</h3>
+                    <canvas id="responseChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- AR Section -->
+        <section id="arSection" style="display: none;">
+            <h2 class="section-title">Augmented Reality View</h2>
+            <div class="ar-container" id="arContainer">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">
+                    <i class="fas fa-vr-cardboard" style="font-size: 3rem;"></i>
+                    <p>Point your camera at a location to see flood risk overlay</p>
+                </div>
+            </div>
+            <button class="btn" onclick="startAR()">
+                <i class="fas fa-mobile-alt"></i> Start AR Experience
+            </button>
+        </section>
+
+        <!-- Admin Panel -->
+        <section id="admin" style="display: none;">
+            <h2 class="section-title">Administrator Dashboard</h2>
+            <div class="dashboard-card">
+                <h3>System Controls</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <button class="btn" onclick="sendBroadcast()">
+                        <i class="fas fa-broadcast-tower"></i> Emergency Broadcast
+                    </button>
+                    <button class="btn" onclick="updateInfrastructure()">
+                        <i class="fas fa-tools"></i> Update Infrastructure
+                    </button>
+                    <button class="btn" onclick="generateReport()">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                    </button>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <h4>Real-time Metrics</h4>
+                    <div id="adminMetrics"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: var(--dark-gray); color: white; padding: 3rem 2rem; margin-top: 4rem;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-water" style="font-size: 2.5rem;"></i>
+                <h2>SpongeCity AI</h2>
+                <p>Next-Generation Flood Management System</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <h4>Features</h4>
+                    <p>AI Predictions</p>
+                    <p>Real-time Monitoring</p>
+                    <p>Community Intelligence</p>
+                </div>
+                <div>
+                    <h4>Technology</h4>
+                    <p>Machine Learning</p>
+                    <p>IoT Sensor Network</p>
+                    <p>3D Visualization</p>
+                </div>
+                <div>
+                    <h4>Connect</h4>
+                    <p>API Documentation</p>
+                    <p>Developer Portal</p>
+                    <p>Emergency API</p>
+                </div>
+                <div>
+                    <h4>Download</h4>
+                    <button class="btn" onclick="installPWA()" style="margin-top: 0.5rem;">
+                        <i class="fas fa-download"></i> Install App
+                    </button>
+                    <p style="margin-top: 0.5rem;">Progressive Web App</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p>&copy; 2024 SpongeCity AI. All rights reserved.</p>
+                <p>Advanced Flood Management System v2.0</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ============ GLOBAL VARIABLES ============
+        let map;
+        let sensors = [];
+        let communityReports = [];
+        let citizenPoints = 1250;
+        let citizenLevel = 5;
+        let currentLanguage = 'en';
+        let emergencyAlertActive = false;
+        let threeScene, threeCamera, threeRenderer;
+        let floodChart, infraChart, responseChart;
+
+        // ============ TRANSLATIONS ============
+        const translations = {
+            en: {
+                title: "AI Flood Intelligence Dashboard",
+                alerts: "Active Alerts",
+                sensors: "Sensor Network",
+                weather: "Live Weather",
+                waterLevels: "Water Levels",
+                submitReport: "Submit Report",
+                runAI: "Run AI Prediction",
+                emergencyAlert: "EMERGENCY ALERT: Severe flooding predicted"
+            },
+            es: {
+                title: "Panel de Inteligencia de Inundaciones IA",
+                alerts: "Alertas Activas",
+                sensors: "Red de Sensores",
+                weather: "Clima en Vivo",
+                waterLevels: "Niveles de Agua",
+                submitReport: "Enviar Informe",
+                runAI: "Ejecutar Predicción IA",
+                emergencyAlert: "ALERTA DE EMERGENCIA: Inundación severa pronosticada"
+            },
+            zh: {
+                title: "AI洪水智能仪表板",
+                alerts: "活动警报",
+                sensors: "传感器网络",
+                weather: "实时天气",
+                waterLevels: "水位",
+                submitReport: "提交报告",
+                runAI: "运行AI预测",
+                emergencyAlert: "紧急警报：预测严重洪水"
+            }
+        };
+
+        // ============ INITIALIZATION ============
+        window.onload = function() {
+            initMap();
+            initSensors();
+            initCharts();
+            init3DScene();
+            updateLanguage();
+            simulateRealTimeData();
+            startWebSocketConnection();
+            setupServiceWorker();
+            
+            // Check for PWA install
+            window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+        };
+
+        // ============ MAP SYSTEM ============
+        function initMap() {
+            map = L.map('map').setView([1.3521, 103.8198], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            // Add flood zones
+            const highRiskZone = L.circle([1.3521, 103.8198], {
+                color: '#F44336',
+                fillColor: '#F44336',
+                fillOpacity: 0.3,
+                radius: 500
+            }).addTo(map).bindPopup('<b>HIGH RISK ZONE</b><br>Predicted flood in 2 hours');
+
+            const mediumRiskZone = L.circle([1.3571, 103.8298], {
+                color: '#FF9800',
+                fillColor: '#FF9800',
+                fillOpacity: 0.3,
+                radius: 300
+            }).addTo(map).bindPopup('<b>MEDIUM RISK</b><br>Monitor water levels');
+
+            // Add infrastructure
+            L.marker([1.3541, 103.8198], {
+                icon: L.divIcon({
+                    html: '<i class="fas fa-tree" style="color: #4CAF50; font-size: 24px;"></i>',
+                    iconSize: [24, 24]
+                })
+            }).addTo(map).bindPopup('<b>Rain Garden</b><br>Capacity: 1000L<br>Effectiveness: 92%');
+
+            L.marker([1.3561, 103.8278], {
+                icon: L.divIcon({
+                    html: '<i class="fas fa-water" style="color: #2196F3; font-size: 24px;"></i>',
+                    iconSize: [24, 24]
+                })
+            }).addTo(map).bindPopup('<b>Retention Pond</b><br>Capacity: 5000L<br>Current: 3200L');
+        }
+
+        // ============ SENSOR NETWORK ============
+        class FloodSensor {
+            constructor(id, location, type, threshold) {
+                this.id = id;
+                this.location = location;
+                this.type = type;
+                this.threshold = threshold;
+                this.currentValue = 0;
+                this.status = 'active';
+                this.battery = 100;
+                this.dataHistory = [];
+                
+                sensors.push(this);
+            }
+
+            updateReading() {
+                // Simulate sensor data
+                const baseValue = {
+                    'water_level': Math.random() * 10,
+                    'rainfall': Math.random() * 20,
+                    'flow_rate': Math.random() * 15,
+                    'humidity': Math.random() * 100
+                }[this.type];
+
+                this.currentValue = baseValue + (Math.random() * 2 - 1);
+                this.battery -= 0.01;
+                
+                if (this.battery < 20) this.status = 'low_battery';
+                if (this.currentValue > this.threshold) this.triggerAlert();
+                
+                this.dataHistory.push({
+                    value: this.currentValue,
+                    timestamp: new Date(),
+                    battery: this.battery
+                });
+
+                return this.currentValue;
+            }
+
+            triggerAlert() {
+                console.log(`Alert from ${this.id}: ${this.type} exceeded threshold!`);
+                if (!emergencyAlertActive && this.type === 'water_level') {
+                    showEmergencyAlert();
+                }
+            }
+        }
+
+        function initSensors() {
+            // Create sensor network
+            new FloodSensor('S001', [1.3521, 103.8198], 'water_level', 5.0);
+            new FloodSensor('S002', [1.3571, 103.8298], 'rainfall', 15.0);
+            new FloodSensor('S003', [1.3541, 103.8198], 'flow_rate', 12.0);
+            new FloodSensor('S004', [1.3561, 103.8278], 'humidity', 90);
+            
+            updateSensorDisplay();
+        }
+
+        function updateSensorDisplay() {
+            const grid = document.getElementById('sensorGrid');
+            grid.innerHTML = '';
+            
+            sensors.forEach(sensor => {
+                const value = sensor.updateReading();
+                grid.innerHTML += `
+                    <div class="sensor-card">
+                        <div class="sensor-icon">
+                            <i class="fas fa-${getSensorIcon(sensor.type)}" style="color: ${getSensorColor(value, sensor.threshold)}"></i>
+                        </div>
+                        <div><strong>${sensor.id}</strong></div>
+                        <div>${value.toFixed(1)} ${getUnit(sensor.type)}</div>
+                        <div style="font-size: 0.8rem; color: ${sensor.battery < 30 ? '#F44336' : '#4CAF50'}">
+                            Battery: ${sensor.battery.toFixed(0)}%
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Update water levels display
+            const waterDiv = document.getElementById('waterLevels');
+            const waterLevels = [
+                { name: "River A", level: 4.2, max: 5.0, trend: "rising" },
+                { name: "Canal B", level: 2.1, max: 3.5, trend: "stable" },
+                { name: "Reservoir", level: 85, max: 90, trend: "rising" }
+            ];
+            
+            waterDiv.innerHTML = waterLevels.map(level => `
+                <div style="margin: 1rem 0;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${level.name}</span>
+                        <span>${level.level}/${level.max}${level.name === 'Reservoir' ? '%' : 'm'}</span>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-fill" style="width: ${(level.level/level.max)*100}%; 
+                            background: ${level.level/level.max > 0.8 ? '#F44336' : '#4CAF50'}">
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 0.9rem;">
+                        <i class="fas fa-arrow-${level.trend === 'rising' ? 'up' : 'right'}"></i>
+                        ${level.trend}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getSensorIcon(type) {
+            const icons = {
+                'water_level': 'tint',
+                'rainfall': 'cloud-rain',
+                'flow_rate': 'water',
+                'humidity': 'cloud'
+            };
+            return icons[type] || 'microchip';
+        }
+
+        function getSensorColor(value, threshold) {
+            if (value > threshold) return '#F44336';
+            if (value > threshold * 0.7) return '#FF9800';
+            return '#4CAF50';
+        }
+
+        function getUnit(type) {
+            const units = {
+                'water_level': 'm',
+                'rainfall': 'mm/hr',
+                'flow_rate': 'm³/s',
+                'humidity': '%'
+            };
+            return units[type] || '';
+        }
+
+        // ============ AI PREDICTION MODEL ============
+        function calculateFloodRisk(rainfall, waterLevel, drainage, history) {
+            const score = (rainfall * 0.4) + (waterLevel * 0.3) + 
+                         ((100 - drainage) * 0.2) + (history * 0.1);
+            
+            if (score >= 70) return { risk: "HIGH", color: "#F44336", icon: "fa-exclamation-triangle", probability: (score/100).toFixed(2) };
+            if (score >= 40) return { risk: "MEDIUM", color: "#FF9800", icon: "fa-exclamation-circle", probability: (score/100).toFixed(2) };
+            return { risk: "LOW", color: "#4CAF50", icon: "fa-check-circle", probability: (score/100).toFixed(2) };
+        }
+
+        function runPredictionModel() {
+            const predictions = [
+                { area: "Downtown", rainfall: 65, waterLevel: 4.8, drainage: 60, history: 80 },
+                { area: "Riverside", rainfall: 45, waterLevel: 3.2, drainage: 75, history: 60 },
+                { area: "Industrial", rainfall: 30, waterLevel: 2.1, drainage: 85, history: 30 },
+                { area: "Suburbs", rainfall: 25, waterLevel: 1.8, drainage: 90, history: 20 }
+            ];
+            
+            const grid = document.getElementById('predictionGrid');
+            grid.innerHTML = '';
+            
+            predictions.forEach(pred => {
+                const result = calculateFloodRisk(pred.rainfall, pred.waterLevel, pred.drainage, pred.history);
+                grid.innerHTML += `
+                    <div class="dashboard-card">
+                        <h4>${pred.area}</h4>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                            <i class="fas ${result.icon}" style="font-size: 2rem; color: ${result.color}"></i>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: ${result.color}">
+                                    ${result.risk}
+                                </div>
+                                <div>Probability: ${(result.probability * 100).toFixed(0)}%</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.9rem;">
+                            <div>Rainfall: ${pred.rainfall}mm</div>
+                            <div>Water Level: ${pred.waterLevel}m</div>
+                            <div>Drainage: ${pred.drainage}%</div>
+                        </div>
+                        <button class="btn" style="margin-top: 0.5rem; width: 100%;" 
+                                onclick="viewEvacuationPlan('${pred.area}')">
+                            <i class="fas fa-route"></i> Evacuation Plan
+                        </button>
+                    </div>
+                `;
+            });
+            
+            // Show emergency alert if high risk
+            if (predictions.some(p => calculateFloodRisk(p.rainfall, p.waterLevel, p.drainage, p.history).risk === "HIGH")) {
+                showEmergencyAlert();
+            }
+        }
+
+        // ============ COMMUNITY SYSTEM ============
+        function submitReport() {
+            const type = document.getElementById('reportType').value;
+            const location = document.getElementById('reportLocation').value;
+            const description = document.getElementById('reportDescription').value;
+            
+            if (!location || !description) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const report = {
+                id: Date.now(),
+                type: type,
+                location: location,
+                description: description,
+                timestamp: new Date(),
+                votes: 0,
+                verified: false
+            };
+            
+            communityReports.unshift(report);
+            updateCommunityFeed();
+            
+            // Award points
+            citizenPoints += 50;
+            document.getElementById('citizenPoints').textContent = citizenPoints;
+            checkLevelUp();
+            
+            // Add to map
+            addReportToMap(report);
+            
+            // Clear form
+            document.getElementById('reportLocation').value = '';
+            document.getElementById('reportDescription').value = '';
+            
+            alert('Report submitted! +50 points earned');
+        }
+
+        function updateCommunityFeed() {
+            const feed = document.getElementById('communityFeed');
+            const recentReports = communityReports.slice(0, 3);
+            
+            feed.innerHTML = recentReports.map(report => `
+                <div style="border-bottom: 1px solid #eee; padding: 0.5rem 0;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong><i class="fas fa-${getReportIcon(report.type)}"></i> ${report.type.toUpperCase()}</strong>
+                        <small>${formatTime(report.timestamp)}</small>
+                    </div>
+                    <div>${report.location}</div>
+                    <div style="font-size: 0.9rem; color: #666;">${report.description}</div>
+                    <div style="margin-top: 0.5rem;">
+                        <button onclick="upvoteReport(${report.id})" style="background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-thumbs-up"></i> (${report.votes})
+                        </button>
+                        <button onclick="verifyReport(${report.id})" style="background: none; border: none; cursor: pointer; margin-left: 1rem;">
+                            <i class="fas fa-check"></i> Verify
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function upvoteReport(id) {
+            const report = communityReports.find(r => r.id === id);
+            if (report) {
+                report.votes++;
+                updateCommunityFeed();
+                
+                // Award points for voting
+                citizenPoints += 5;
+                document.getElementById('citizenPoints').textContent = citizenPoints;
+            }
+        }
+
+        function verifyReport(id) {
+            const report = communityReports.find(r => r.id === id);
+            if (report) {
+                report.verified = true;
+                updateCommunityFeed();
+                
+                // Award points for verification
+                citizenPoints += 25;
+                document.getElementById('citizenPoints').textContent = citizenPoints;
+                checkLevelUp();
+            }
+        }
+
+        function getReportIcon(type) {
+            const icons = {
+                'flood': 'water',
+                'blockage': 'road',
+                'damage': 'tools',
+                'other': 'flag'
+            };
+            return icons[type] || 'flag';
+        }
+
+        function addReportToMap(report) {
+            // Simulate coordinates
+            const lat = 1.3521 + (Math.random() * 0.01 - 0.005);
+            const lng = 103.8198 + (Math.random() * 0.01 - 0.005);
+            
+            L.marker([lat, lng], {
+                icon: L.divIcon({
+                    html: `<i class="fas fa-user" style="color: #FF9800; font-size: 20px;"></i>`,
+                    iconSize: [20, 20]
+                })
+            }).addTo(map).bindPopup(`
+                <b>Community Report</b><br>
+                Type: ${report.type}<br>
+                ${report.description}<br>
+                <small>${formatTime(report.timestamp)}</small>
+            `);
+        }
+
+        // ============ 3D VISUALIZATION ============
+        function init3DScene() {
+            const container = document.getElementById('threeContainer');
+            if (!container) return;
+            
+            threeScene = new THREE.Scene();
+            threeCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+            
+            threeRenderer.setSize(container.clientWidth, container.clientHeight);
+            threeRenderer.setClearColor(0x1a1a2e);
+            container.appendChild(threeRenderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            threeScene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            threeScene.add(directionalLight);
+            
+            // Create city buildings
+            createCityBuildings();
+            
+            // Position camera
+            threeCamera.position.set(15, 15, 15);
+            threeCamera.lookAt(0, 0, 0);
+            
+            // Start animation
+            animate3D();
+        }
+
+        function createCityBuildings() {
+            const buildingColors = [0x4CAF50, 0x2196F3, 0xFF9800, 0x9C27B0];
+            
+            for (let i = 0; i < 20; i++) {
+                const width = 1 + Math.random() * 2;
+                const height = 2 + Math.random() * 8;
+                const depth = 1 + Math.random() * 2;
+                
+                const geometry = new THREE.BoxGeometry(width, height, depth);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const building = new THREE.Mesh(geometry, material);
+                building.position.set(
+                    (Math.random() - 0.5) * 20,
+                    height / 2,
+                    (Math.random() - 0.5) * 20
+                );
+                
+                threeScene.add(building);
+            }
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            
+            // Rotate scene slowly
+            threeScene.rotation.y += 0.001;
+            
+            threeRenderer.render(threeScene, threeCamera);
+        }
+
+        function simulateRainfall() {
+            // Add water plane
+            const waterGeometry = new THREE.PlaneGeometry(30, 30, 50, 50);
+            const waterMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x2196F3,
+                transparent: true,
+                opacity: 0.6,
+                wireframe: false
+            });
+            
+            const water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -2;
+            threeScene.add(water);
+            
+            // Animate water rising
+            let waterLevel = -2;
+            const waterRise = setInterval(() => {
+                waterLevel += 0.05;
+                water.position.y = waterLevel;
+                
+                if (waterLevel > 4) {
+                    clearInterval(waterRise);
+                }
+            }, 100);
+        }
+
+        function show3DView() {
+            document.getElementById('map').style.display = 'none';
+            document.getElementById('threeView').style.display = 'block';
+        }
+
+        function showMap() {
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('threeView').style.display = 'none';
+        }
+
+        // ============ EMERGENCY SYSTEM ============
+        function showEmergencyAlert() {
+            emergencyAlertActive = true;
+            const alert = document.getElementById('emergencyAlert');
+            alert.style.display = 'block';
+            
+            // Auto-hide after 30 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+                emergencyAlertActive = false;
+            }, 30000);
+        }
+
+        function sendBroadcast() {
+            const message = prompt("Enter emergency broadcast message:");
+            if (message) {
+                alert(`Broadcast sent: ${message}`);
+                
+                // In real implementation, send to all connected devices
+                console.log("Emergency broadcast:", message);
+            }
+        }
+
+        // ============ CHARTS & ANALYTICS ============
+        function initCharts() {
+            const ctx1 = document.getElementById('floodChart').getContext('2d');
+            floodChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                    datasets: [{
+                        label: 'Flood Incidents',
+                        data: [3, 5, 2, 8, 4, 6, 7],
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('infraChart').getContext('2d');
+            infraChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Rain Gardens', 'Ponds', 'Green Roofs', 'Pavements', 'Bioswales'],
+                    datasets: [{
+                        label: 'Effectiveness %',
+                        data: [92, 88, 76, 82, 94],
+                        backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#009688']
+                    }]
+                }
+            });
+
+            const ctx3 = document.getElementById('responseChart').getContext('2d');
+            responseChart = new Chart(ctx3, {
+                type: 'doughnut',
+                data: {
+                    labels: ['< 15min', '15-30min', '30-60min', '> 60min'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#F44336']
+                    }]
+                }
+            });
+        }
+
+        // ============ GAMIFICATION ============
+        function checkLevelUp() {
+            const newLevel = Math.floor(citizenPoints / 250) + 1;
+            if (newLevel > citizenLevel) {
+                citizenLevel = newLevel;
+                document.getElementById('citizenLevel').textContent = citizenLevel;
+                
+                // Show level up animation
+                alert(`🎉 Level Up! You're now Level ${citizenLevel}`);
+            }
+        }
+
+        // ============ INTERNATIONALIZATION ============
+        function updateLanguage() {
+            const lang = document.getElementById('languageSelect').value;
+            currentLanguage = lang;
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        // ============ PWA FUNCTIONALITY ============
+        function setupServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(() => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Error:', err));
+            }
+        }
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('PWA installed');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        let deferredPrompt;
+        function handleInstallPrompt(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+        }
+
+        // ============ UTILITY FUNCTIONS ============
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - new Date(date);
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (minutes < 1440) return `${Math.floor(minutes/60)}h ago`;
+            return `${Math.floor(minutes/1440)}d ago`;
+        }
+
+        function simulateRealTimeData() {
+            // Update sensors every 5 seconds
+            setInterval(updateSensorDisplay, 5000);
+            
+            // Update weather every 10 seconds
+            setInterval(() => {
+                const rainfall = (2 + Math.random() * 3).toFixed(1);
+                document.getElementById('rainfallRate').textContent = rainfall;
+                
+                // Randomly trigger alerts
+                if (Math.random() > 0.8) {
+                    showEmergencyAlert();
+                }
+            }, 10000);
+            
+            // Update active alerts
+            setInterval(() => {
+                const alerts = Math.floor(2 + Math.random() * 3);
+                document.getElementById('activeAlerts').textContent = alerts;
+            }, 15000);
+        }
+
+        function startWebSocketConnection() {
+            // Simulate real-time WebSocket connection
+            setInterval(() => {
+                // Simulate new data from server
+                const newData = {
+                    type: 'sensor_update',
+                    timestamp: new Date(),
+                    data: sensors.map(s => ({
+                        id: s.id,
+                        value: s.updateReading()
+                    }))
+                };
+                
+                // Process incoming data
+                processWebSocketMessage(newData);
+            }, 3000);
+        }
+
+        function processWebSocketMessage(data) {
+            // Handle different message types
+            switch(data.type) {
+                case 'sensor_update':
+                    updateSensorDisplay();
+                    break;
+                case 'new_alert':
+                    showEmergencyAlert();
+                    break;
+                case 'community_report':
+                    communityReports.unshift(data.report);
+                    updateCommunityFeed();
+                    break;
+            }
+        }
+
+        // ============ VIEW FUNCTIONS ============
+        function viewEvacuationPlan(area) {
+            alert(`Showing evacuation plan for ${area}...\n1. Move to higher ground\n2. Follow marked routes\n3. Avoid flooded areas\n4. Proceed to designated shelters`);
+        }
+
+        function useCamera() {
+            alert('Camera access requested. In a real app, this would access your camera.');
+        }
+
+        function startAR() {
+            document.getElementById('arSection').style.display = 'block';
+            alert('AR view activated. Point your camera at a location.');
+        }
+
+        function showHistoricalData() {
+            alert('Opening historical data analysis...');
+            // In real implementation, show modal with historical charts
+        }
+
+        function updateInfrastructure() {
+            const status = prompt("Update infrastructure status (operational/maintenance/failed):");
+            if (status) {
+                alert(`Infrastructure status updated to: ${status}`);
+            }
+        }
+
+        function generateReport() {
+            const report = `
+                SPONGECITY SYSTEM REPORT
+                Generated: ${new Date().toLocaleString()}
+                
+                ACTIVE ALERTS: ${document.getElementById('activeAlerts').textContent}
+                SENSOR STATUS: ${sensors.filter(s => s.status === 'active').length}/${sensors.length} active
+                COMMUNITY REPORTS: ${communityReports.length} total
+                CITIZEN PARTICIPATION: ${citizenPoints} points
+                
+                RECOMMENDATIONS:
+                1. Check sensors S001, S002
+                2. Review downtown flood predictions
+                3. Schedule infrastructure maintenance
+            `;
+            
+            alert('Report generated:\n\n' + report);
+            // In real implementation, generate PDF/download
+        }
+    </script>
+</body>
+</html>
